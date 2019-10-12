@@ -46,7 +46,13 @@
 *.mod*
 *.cmd
 .tmp_versions/
+
+# temp file
+*.swp
+
 modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+Makefile.posix
+Makefile.windows
