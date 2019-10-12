@@ -1,4 +1,0 @@
-GNU_INSTALL_ROOT := /usr/local/bin/gcc-arm-none-eabi-8-2018-q4-major
-GNU_VERSION := 8.2.1
-GNU_PREFIX := arm-none-eabi
-
