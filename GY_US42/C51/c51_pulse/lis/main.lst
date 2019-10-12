@@ -1,0 +1,120 @@
+C51 COMPILER V8.02   MAIN                                                                  07/10/2017 09:54:53 PAGE 1   
+
+
+C51 COMPILER V8.02, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN ..\output\main.obj
+COMPILER INVOKED BY: D:\Program Files (x86)\Keil\C51\BIN\C51.EXE main.c BROWSE INCDIR(..\Peripherals\inc\) DEBUG OBJECTE
+                    -XTEND PRINT(..\lis\main.lst) OBJECT(..\output\main.obj)
+
+line level    source
+
+   1          #include <reg52.h>
+   2          #include "usart.h" 
+   3          #include "exti.h"
+   4          
+   5          /*
+   6          硬件接法：
+   7          
+   8          C51晶振为11.0592Mhz
+   9          机器周期 = 12*时钟周期=12*（1/11.0592）us=1.085us
+  10          距离=T_count*1.085*340/2
+  11          
+  12          GY_US42----------c51
+  13          1、PS------------GND 
+  14          2、GND-----------GND
+  15          3、VCC-----------5V
+  16          4、GY_US42_INT---c51_P3^2,中断捕获低电平
+  17          5、c51_TX--------FT232
+  18          6、GY_US42_CR----c51_P3^6，发送脉冲
+  19          软件说明:
+  20          该程序采用串口方式获取模块距离数据，波特率9600
+  21          
+  22          
+  23          注：中断函数位于stc_it.c
+  24          联系方式：
+  25          http://shop62474960.taobao.com/?spm=a230r.7195193.1997079397.2.9qa3Ky&v=1
+  26          
+  27          */
+  28          sbit Trig = P3^6;
+  29          sbit Echo =P3^2 ;
+  30          
+  31          void send_com(uint8_t datas)
+  32          {
+  33   1         uint8_t bytes[4]={0};
+  34   1              bytes[0]=0xa5;
+  35   1              bytes[1]=0xa5;
+  36   1              bytes[2]=datas;//功能字节
+  37   1              USART_Send(bytes,4);//发送帧头、功能字节、校验和
+  38   1      }
+  39          void delay(uint16_t z)
+  40          {
+  41   1       while(z--);
+  42   1       
+  43   1      }
+  44          void delay_20us(void)
+  45          { 
+  46   1          unsigned char a ;
+  47   1          for(a=0;a<100;a++);
+  48   1      }
+  49          
+  50          uint16_t time_count=0;
+  51          int main(void)
+  52          {
+  53   1      
+  54   1          uint8_t sum=0,i=0;
+C51 COMPILER V8.02   MAIN                                                                  07/10/2017 09:54:53 PAGE 2   
+
+  55   1              uint16_t distance=0;
+  56   1              float temp=0;
+  57   1              IP=0X01;
+  58   1              Trig=0;
+  59   1              Usart_Int(9600);
+  60   1              Exti_Int(0,0);
+  61   1          TMOD |= 0x01;//定时器0，工作方式1，16位计数值
+  62   1              ET0=1;
+  63   1              delay(1000);
+  64   1      
+  65   1              while(1)
+  66   1              {
+  67   2              
+  68   2                      TH0=0;          //定时器1清零
+  69   2              TL0=0;          //定时器1清零
+  70   2              TF0=0;          //计数溢出标志
+  71   2                 ////////发送脉冲/////////////
+  72   2                  Trig=1;
+  73   2                      delay_20us();
+  74   2                  Trig=0;
+  75   2                      BIT=0;
+  76   2                 ////////等待Echo拉高///////////////
+  77   2                      while(!Echo) ;
+  78   2                       TR0=1;          //启动定时器1
+  79   2                       EX0=1;          //打开外部中断0
+  80   2                 ///////等待Echo拉低///////////////
+  81   2                 // while(BIT==0) ;
+  82   2                  delay(10000);         
+  83   2                      if(BIT==1)
+  84   2                      {
+  85   3                        temp=((float)time_count)/2000000*340;
+  86   3                         distance=temp*100;
+  87   3                        send_out(&distance,1,0x45);//上传给上位机 
+  88   3                     
+  89   3                      }else
+  90   2                              USART_send_byte(0xff);
+  91   2                      BIT=0;
+  92   2                      
+  93   2              }
+  94   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    234    ----
+   CONSTANT SIZE    =      4    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2      13
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
