@@ -51,20 +51,28 @@ void MaxSonarInitSerial(sMaxSonar *sonar) {
 
 void MaxSonarInitiateReading(sMaxSonar *sonar) {
   digitalWrite(sonar->rx_pin, 1);
+  delay(2);
+
   // Pulse width output will be ready after 1 ms
-  delay(1);
-  digitalWrite(sonar->rx_pin, 0);
+  //delay();
+  //digitalWrite(sonar->rx_pin, 0);
 }
 
 int MaxSonarGetReadingPw(sMaxSonar *sonar) {
+  //digitalWrite(sonar->rx_pin, 1);
+  //delay(2);
   // Need to read pw signal within 37.5 ms after the initiation of a reading
   //Pulse Width representation with a scale factor of 147 uS per Inch.
   unsigned long pulse = pulseIn(sonar->pw_pin, HIGH);
+  //unsigned long pulse = pulseInLong(sonar->pw_pin, HIGH);
+
   //147uS per inch
   //inches = pulse / 147;
   //change inches to centimetres
   //cm = inches * 2.54;
   sonar->dist_cm = pulse / 57.874;
+  
+  //digitalWrite(sonar->rx_pin, 0);
 
   //Serial.print(inches);
   //Serial.print("in, ");
@@ -164,14 +172,10 @@ void setup() {
 
   //MaxSonar setup
   MaxSonarInitPw(&g_maxsonar[0]);
-
-  //pinMode(g_maxsonar[0].rx_pin, OUTPUT);
-  //// Pull low to disable reading
-  //digitalWrite(g_maxsonar[0].rx_pin, 0);
-  //pinMode(g_maxsonar[0].pw_pin, INPUT);
+  MaxSonarInitPw(&g_maxsonar[1]);
 
   // GY-US42 setup
-  GYUS42Init();
+  //GYUS42Init();
 }
 
 void PrintDist(const char *name, unsigned long dist) {
@@ -185,18 +189,20 @@ void loop(){
   //while (1);
   MaxSonarInitiateReading(&g_maxsonar[0]);
   MaxSonarGetReadingPw(&g_maxsonar[0]);
-  //MaxSonarInitiateReading(&g_maxsonar[1]);
-  //MaxSonarGetReadingPw(&g_maxsonar[1]);
+  MaxSonarInitiateReading(&g_maxsonar[1]);
+  MaxSonarGetReadingPw(&g_maxsonar[1]);
   PrintDist("MaxSonar0", g_maxsonar[0].dist_cm);
-  //PrintDist("MaxSonar1", g_maxsonar[1].dist_cm);
+  PrintDist("MaxSonar1", g_maxsonar[1].dist_cm);
   // Need at least 50 ms before the next read
-  delay(50);
+  //delay(50);
 
-  GYUS42InitiateReading(); //Tell the sensor to perform a ranging cycle
-  delay(100); //Wait for sensor to finish
-  word range = GYUS42GetReading(); //Get the range from the sensor
-  PrintDist("GYUS42   ", range);
+  //GYUS42InitiateReading(); //Tell the sensor to perform a ranging cycle
+  //delay(100); //Wait for sensor to finish
+  //word range = GYUS42GetReading(); //Get the range from the sensor
+  //PrintDist("GYUS42   ", range);
 // changeAddress(0x70,0x20,0);
+  digitalWrite(g_maxsonar[0].rx_pin, 0);
+  digitalWrite(g_maxsonar[1].rx_pin, 0);
 
   delay(1000);
 
